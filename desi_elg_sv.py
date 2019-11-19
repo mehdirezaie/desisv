@@ -2,7 +2,8 @@
     Systematics of SV ELG
 
 
-
+    Nov 11, 2019 : perform regression on the NGC / SGC separately
+                   only on the eBOSS footprint
 '''
 import matplotlib.pyplot as plt
 import fitsio as ft
@@ -19,32 +20,32 @@ from LSSutils.catalogs.combinefits import hd5_2_fits
 from LSSutils.catalogs.datarelease import cols_dr8
 
 
+prepare_regression = False
 
 
-data = pd.read_hdf('/home/mehdi/data/dr8_combined256.h5')
-ngal = hp.read_map('/home/mehdi/data/formehdi/dr8_elgsv_ngal.hp.256.fits', verbose=False)
-frac = hp.read_map('/home/mehdi/data/formehdi/dr8_elgsv_frac.hp.256.fits', verbose=False)
-data['ngal'] = ngal
-data['nran'] = frac
+if prepare_regression:
+    # path
+    version  = '0.2'
+    path     = '/home/mehdi/data/formehdi/' + version + '/'
+    if not os.path.isdir(path):os.makedirs(path)
+    
+    # read
+    data = pd.read_hdf('/home/mehdi/data/dr8_combined256.h5')
+    mask = hp.read_map('/home/mehdi/data/formehdi/dr8_mask_eBOSS.hp256.fits',          verbose=False).astype('bool')
+    data['ngal'] = hp.read_map('/home/mehdi/data/formehdi/dr8_elgsv_ngal.hp.256.fits', verbose=False)
+    data['nran'] = hp.read_map('/home/mehdi/data/formehdi/dr8_elgsv_frac.hp.256.fits', verbose=False)
 
-
-
-version  = '0.1'
-path     = '/home/mehdi/data/formehdi/' + version + '/'
-if not os.path.isdir(path):os.makedirs(path)
-mysample = data.dropna()
-mysample = mysample[mysample['nran']> 0]
-hd5_2_fits(mysample, cols_dr8,  
-                          fitname= path + 'dr8_elgsv.fits',
-                          hpmask = path + 'dr8_elgsv_mask.hp.256.fits',
-                          hpfrac = None,
-                          fitnamekfold=path + 'dr8_elgsv_5r.npy',
-                          res=256,
-                          k=5)
-print(mysample.shape)
-
-                 
-                 
-ut.split_mask(path + 'dr8_elgsv_mask.hp.256.fits',
-              path + 'dr8_elgsv_mask_ngc.hp.256.fits',
-              path + 'dr8_elgsv_mask_sgc.hp.256.fits')
+    # split into NGC and SGC
+    caps = ['ngc', 'sgc']
+    ngc, sgc = ut.split2caps(mask)        
+    for i,cap in enumerate([ngc, sgc]):    
+        mysample = data[(data['nran']> 0) & cap[data.index]]
+        mysample = mysample.dropna()
+        hd5_2_fits(mysample, cols_dr8,  
+                                  fitname= path + 'dr8_elgsv_'+caps[i]+'.fits',
+                                  hpmask = path + 'dr8_elgsv_mask_'+caps[i]+'.hp.256.fits',
+                                  hpfrac = None,
+                                  fitnamekfold=path + 'dr8_elgsv_'+caps[i]+'_5r.npy',
+                                  res=256,
+                                  k=5)
+        print(mysample.shape)
