@@ -29,9 +29,9 @@ conda activate py3p6
 # 0.1 : CCD all sky
 # 0.2 : CCD eboss NGC/SGC
 # 0.3 : TS bmzls, decalsn decalss with dec > -30
+# 0.4 : colorbox selection, everything else as 0.3
 
-
-version=0.3
+version=0.4
 
 
 # scripts
@@ -113,7 +113,6 @@ do
         python $multfit --input $ngal_features_5fold \
                         --output ${oudir_reg}${mult1}/ \
                         --split --nside $nside --axfit $axfit
-
     done
 done        
     #===================
