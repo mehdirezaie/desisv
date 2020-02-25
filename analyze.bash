@@ -29,9 +29,9 @@ conda activate py3p6
 # 0.1 : CCD all sky
 # 0.2 : CCD eboss NGC/SGC
 # 0.3 : TS bmzls, decalsn decalss with dec > -30
+# 0.4 : colorbox selection, everything else as 0.3
 
-
-version=0.3
+version=0.4
 
 
 # scripts
@@ -95,25 +95,24 @@ do
         du -h $ranmap
         du -h $ngal_features_5fold
         du -h $drfeat
-        #for rank in 0 1 2 3 4
-        #do
-        #   echo "feature selection on " $rank
-        #   mpirun -np 16 python $ablation --data $ngal_features_5fold \
-        #                  --output $oudir_ab --log $log_ablation \
-        #                --rank $rank --axfit $axfit
-        #done              
+        for rank in 0 1 2 3 4
+        do
+           echo "feature selection on " $rank
+           mpirun -np 16 python $ablation --data $ngal_features_5fold \
+                          --output $oudir_ab --log $log_ablation \
+                        --rank $rank --axfit $axfit
+        done              
         echo 'regression on ' $cap $tsi $axfit
-        #mpirun -np 5 python $nnfit --input $ngal_features_5fold \
-        #                  --output ${oudir_reg}${nn1}/ \
-        #                  --ablog ${oudir_ab}${log_ablation} --nside $nside            
-        
         mpirun -np 5 python $nnfit --input $ngal_features_5fold \
-                 --output ${oudir_reg}${nn2}/ --nside $nside --axfit $axfit  
+                          --output ${oudir_reg}${nn1}/ \
+                          --ablog ${oudir_ab}${log_ablation} --nside $nside            
+        
+        #mpirun -np 5 python $nnfit --input $ngal_features_5fold \
+        #         --output ${oudir_reg}${nn2}/ --nside $nside --axfit $axfit  
 
-        python $multfit --input $ngal_features_5fold \
-                        --output ${oudir_reg}${mult1}/ \
-                        --split --nside $nside --axfit $axfit
-
+        #python $multfit --input $ngal_features_5fold \
+        #                --output ${oudir_reg}${mult1}/ \
+        #                --split --nside $nside --axfit $axfit
     done
 done        
     #===================
